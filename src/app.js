@@ -1,17 +1,10 @@
 const express = require("express");
-const app = express();
-const connectDB = require("./db/db");
-const formRoutes = require("./routes/formRoutes");
 const cors = require("cors");
+const formRoutes = require("./routes/formRoutes");
 
-
-require("dotenv").config();
-
-connectDB();
-
+const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -19,6 +12,5 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/forms", formRoutes);
-
 
 module.exports = app;
