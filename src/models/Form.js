@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema({
     question: String,
-    type: { type: String, enum: ["afirmative", "descriptive", "numeric"] },
+    type: { type: String, enum: ["afirmative", "descriptive", "numeric"], required:true },
     formula: String,
     question_number: Number,
     response: mongoose.Schema.Types.Mixed,
@@ -12,8 +12,9 @@ const formSchema = new mongoose.Schema({
     form_name: { type: String, required: true },
     medic_name: { type: String, required: true },
     patient_name: { type: String, required: true },
-    status: {type: String, enum: ["answered", "no-answered"]},
+    status: {type: String, enum: ["answered", "no-answered"], required:true },
     questions: [questionSchema],
+    link: {type: String}
 }, {
     timestamps: true 
 });
