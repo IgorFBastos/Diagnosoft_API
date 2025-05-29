@@ -4,7 +4,7 @@
 FROM node:20
 
 # 2. Criar diretório de trabalho dentro do container
-WORKDIR /app
+WORKDIR /Diagnosoft_API
 
 # 3. Copiar os arquivos de dependência (package.json e package-lock.json)
 COPY package*.json ./

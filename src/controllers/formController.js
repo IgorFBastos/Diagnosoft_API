@@ -1,14 +1,15 @@
 
 const Form = require("../models/Form");
+const { evaluate } = require('mathjs');
 
 
 
 
 const createForm = async (req, res) => {
     try {
-        const { form_name, medic_name, patient_name, questions, status, link} = req.body;
+        const { form_name, medic_name, patient_name, questions, status, link } = req.body;
 
-        const newForm = new Form({ form_name, medic_name, patient_name,status, questions, link });
+        const newForm = new Form({ form_name, medic_name, patient_name, status, questions, link });
         const saveForm = await newForm.save();
 
         res.status(201).json({ message: "Formulário criado com sucesso.", formId: saveForm._id });
@@ -21,7 +22,7 @@ const createForm = async (req, res) => {
 const getAllforms = async (req, res) => {
 
     try {
-        
+
         const forms = await Form.find();
 
         return res.status(200).json(forms);
@@ -54,43 +55,73 @@ const getForm = async (req, res) => {
 }
 
 
-const updatedForm = async (req, res) =>  {
 
+
+
+const updatedForm = async (req, res) => {
     try {
-
-        console.log("entrou no updatedForm")
+        console.log("entrou no updatedForm");
 
         const { id } = req.params;
-
         const { form_name, medic_name, patient_name, status, questions, link } = req.body;
 
+        const processedQuestions = processNumericQuestions(questions);
 
-        const updatedForm = await Form.findByIdAndUpdate(id, 
+        const updatedDoc = await Form.findByIdAndUpdate(
+            id,
             {
-                form_name: form_name,
-                medic_name: medic_name,
-                patient_name: patient_name,
-                status: status,
-                questions: questions,
-                link: link
+                form_name,
+                medic_name,
+                patient_name,
+                status,
+                questions: processedQuestions,
+                link
             },
+            { new: true }
+        );
 
-            { new:true }
-        )
-
-        if (!updatedForm) {
+        if (!updatedDoc) {
             return res.status(404).json({ message: "Formulário não encontrado." });
         }
 
-        res.status(200).json(updatedForm);
+        res.status(200).json(updatedDoc);
 
     } catch (error) {
-
         console.error(error);
         res.status(500).json({ message: "Erro ao atualizar formulário." });
-        
     }
+};
 
+
+function processNumericQuestions(questions) {
+    return questions.map((question) => {
+        if (question.type === "numeric" && question.formula && question.variables?.length) {
+            try {
+                const scope = {};
+
+                for (const variable of question.variables) {
+                    console.log("variable.response: ", variable.response)
+                    if (!variable.response) {
+                        throw new Error(`Variable ${variable.name} is missing a numeric response`);
+                    }
+                    scope[variable.name] = variable.response;
+                }
+
+                const result = evaluate(question.formula, scope);
+
+                return {
+                    ...question,
+                    response: result 
+                };
+            } catch (err) {
+                console.error(`Erro ao processar fórmula da pergunta ${question.question_number}:`, err.message);
+                return question;
+            }
+
+        }
+
+        return question;
+    });
 }
 
 module.exports = { createForm, getForm, updatedForm, getAllforms };
